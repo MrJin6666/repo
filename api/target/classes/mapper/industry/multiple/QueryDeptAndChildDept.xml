@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.industry.multiple.dao.LinkManDao">
+
+    <select id="queryDeptAndChildDept" parameterType="java.lang.String" resultType="com.goboosoft.industry.multiple.dto.QueryDeptAndChildDeptDTO">
+      SELECT  t.`company_id`  companyId,t.`name`  deptName,t.id deptId,t.pid,m.`name` companyName
+      FROM sys_dept t, sys_company m
+      WHERE  t.pids LIKE #{pid} AND t.`company_id` = m.id
+    </select>
+
+    <select id="querySameLevelDept" parameterType="java.lang.Long" resultType="com.goboosoft.industry.multiple.dto.QueryDeptAndChildDeptDTO">
+        SELECT  t.`company_id`  companyId,t.`name`  deptName,t.id deptId,m.`name` companyName
+        FROM sys_dept t, sys_company m
+        WHERE  t.pid = #{id} AND t.`company_id` = m.id
+    </select>
+
+    <select id="querySysCompanyDept"  resultType="com.goboosoft.industry.multiple.dto.SysDeptDTO">
+        SELECT id  ,NAME ,pid FROM `sys_dept`
+        <where>
+        <if test="params.deptId == null">
+        id = (SELECT dept_id FROM `sys_user` WHERE id= #{params.userId})
+        </if>
+        <if test="params.deptId != null">
+        pid = #{params.deptId}
+        </if>
+        </where>
+    </select>
+</mapper>

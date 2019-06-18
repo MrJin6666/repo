@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.industry.multiple.dao.BasicInspectionListDao">
+
+    <resultMap type="com.goboosoft.industry.multiple.entity.BasicInspectionListEntity" id="basicInspectionListMap">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="level" column="level"/>
+        <result property="pid" column="pid"/>
+        <result property="totalScore" column="total_score"/>
+    </resultMap>
+
+    <select id="getListPid" resultType="com.goboosoft.industry.multiple.dto.BasicInspectionListDTO">
+        select * from basic_inspection_list where pid = #{pid}
+    </select>
+    <!-- 查询抽查样本前一次的图片附件-->
+    <select id="getBeforeAccessory"  resultType="java.lang.String"><![CDATA[
+       SELECT picture FROM `govern_process_plan`
+        WHERE govern_plan_id=
+        (SELECT id FROM `govern_plan`
+        WHERE
+        company_id = #{companyId}
+        AND
+        company_inspection_id= #{inspectionId}
+        AND
+        create_date < #{now}
+        ORDER BY create_date DESC   LIMIT 1)
+    ]]></select>
+
+    <select id="findConmpanyInspectList" resultType="com.goboosoft.industry.multiple.dto.BasicInspectionListDTO">
+        select a.id as companyInspectId,a.name,c.cycle,c.id,a.name from conmpany_inspect a
+        join basic_inspection_list b on b.id = a.list_id
+        join basic_inspection_list c on b.id = c.pid
+        where a.company_id = #{comId} and c.level = '0'
+    </select>
+    <select id="getCycleByInspectionId" resultType="java.lang.Long">
+        SELECT cycle FROM `basic_inspection_list` WHERE id = #{inspectionListId}
+    </select>
+</mapper>

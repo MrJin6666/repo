@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.industry.multiple.dao.SpotCheckDao">
+    <!-- 查询检查项-->
+    <select id="getinspectionProject"  resultType="com.goboosoft.industry.multiple.dto.InspectionProjectDTO">
+        SELECT id,NAME FROM `basic_inspection_list` WHERE LEVEL=0 and pid=0
+    </select>
+    <!-- 查询检查内容-->
+    <select id="getinspectionitems"  resultType="com.goboosoft.industry.multiple.dto.InspectionItemsDTO">
+        SELECT id,NAME,pid FROM `basic_inspection_list` WHERE LEVEL=0 AND pid !=0
+    </select>
+    <!-- 查询未上报的抽查任务-->
+    <select id="getNotReportedList"  resultType="com.goboosoft.industry.multiple.dto.SpotCheckSampleListDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+        SELECT gp.*,sc.`name` companyName,gpp.`select_date` FROM `govern_plan` gp
+        LEFT JOIN `govern_process_plan` gpp ON gp.`id`=gpp.`govern_plan_id`
+        LEFT JOIN `sys_company` sc ON gp.`company_id`= sc.id where
+        (
+        0 =(SELECT is_dept_head FROM `sys_user` WHERE id=#{params.userId})
+        AND
+        gp.creator_dept_id IN (
+        SELECT id FROM `sys_dept` WHERE pids LIKE CONCAT('%',(SELECT dept_id FROM `sys_user` WHERE id=#{params.userId}),'%')
+        OR id=(SELECT dept_id FROM `sys_user` WHERE id=#{params.userId})
+        )
+        ) OR (
+        gp.creator=#{params.userId}
+        )
+        )aa
+        where aa.`seat_date` IS NULL
+        order by aa.select_date desc
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+    </select>
+    <!-- 查询已上报的抽查任务-->
+    <select id="getReportedList"  resultType="com.goboosoft.industry.multiple.dto.SpotCheckSampleListDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+        SELECT gp.*,sc.`name` companyName,gpp.`select_date` FROM `govern_plan` gp
+        LEFT JOIN `govern_process_plan` gpp ON gp.`id`=gpp.`govern_plan_id`
+        LEFT JOIN `sys_company` sc ON gp.`company_id`= sc.id where
+        (
+        0 =(SELECT is_dept_head FROM `sys_user` WHERE id=#{params.userId})
+        AND
+        gp.creator_dept_id IN (
+        SELECT id FROM `sys_dept` WHERE pids LIKE CONCAT('%',(SELECT dept_id FROM `sys_user` WHERE id=#{params.userId}),'%')
+        OR id=(SELECT dept_id FROM `sys_user` WHERE id=#{params.userId})
+        )
+        ) OR (
+        gp.creator=#{params.userId}
+        )
+        )aa
+        where aa.`seat_date` IS NOT NULL
+        order by aa.select_date desc
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+    </select>
+    <!-- 根据根据样本id查询订单详情-->
+    <select id="getSpotCheckDetails"  resultType="com.goboosoft.industry.multiple.dto.SpotCheckSampleListDTO">
+        SELECT gp.id,gp.company_id,CODE,NAME,inspection_list_id,gpp.select_date,gpp.select_limit_date,seat_date,gpp.`picture`,gp.`company_inspection_id`
+        FROM govern_plan gp LEFT JOIN`govern_process_plan` gpp ON gpp.`govern_plan_id`=gp.`id`
+        WHERE gp.`id`= #{id}
+    </select>
+    <!-- 根据企业id查询抽查清单-->
+    <select id="getspotCheckList"  resultType="com.goboosoft.industry.multiple.dto.SpotCheckListDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+        SELECT gp.id ,gp.`code`,CONCAT( gp.name,'(',bi.`name`,')') title,gp.`person`,gp.`create_date`,gp.`seat_date`,IF(gp.`seat_date`IS NULL,0,1)seat_status,gp.`inspection_list_id`
+        FROM govern_plan gp
+        LEFT JOIN `basic_inspection_list` bi ON gp.`inspection_list_id`= bi.`id`
+        WHERE company_id =#{params.companyId} AND plan_status=1
+        )aa
+        ) c
+        <where>
+        <if test="params.lastRowNum != null">
+        c.rownum > ${params.lastRowNum}
+        </if>
+        <if test="params.pageSize != null">
+        LIMIT ${params.pageSize}
+        </if>
+        </where>
+    </select>
+</mapper>

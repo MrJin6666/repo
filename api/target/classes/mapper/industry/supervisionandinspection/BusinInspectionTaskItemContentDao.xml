@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.industry.supervisionandinspection.dao.BusinInspectionTaskItemContentDao">
+
+    <resultMap type="com.goboosoft.industry.supervisionandinspection.entity.BusinInspectionTaskItemContentEntity" id="businInspectionTaskItemContentMap">
+        <result property="id" column="id"/>
+        <result property="inspectionTaskItemId" column="inspection_task_item_id"/>
+        <result property="inspectionListId" column="inspection_list_id"/>
+        <result property="inspectionListName" column="inspection_list_name"/>
+        <result property="score" column="score"/>
+        <result property="totalScore" column="total_score"/>
+        <result property="passStatus" column="pass_status"/>
+    </resultMap>
+    <select id="getProblemsList" resultType="com.goboosoft.industry.statistics.dto.CommonProblemsDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+        select bb.inspection_list_id,bb.inspection_list_name,COUNT(bb.inspection_list_id)number ,bb.`create_date` from (
+        SELECT btc.inspection_list_id,btc.inspection_list_name,bt.`create_date`,btc.pass_status
+        FROM `busin_inspection_task_item_content` btc
+        LEFT JOIN `busin_inspection_task_item`  bi ON btc.`inspection_task_item_id` = bi.`id`
+        LEFT JOIN  `busin_inspection_task`  bt ON bi.`inspection_task_id` = bt.`id`
+        WHERE
+        (0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{params.userId}) AND
+        dept_id IN (SELECT id FROM sys_dept JOIN (SELECT getDeptChildList((SELECT dept_id FROM `sys_user` WHERE id= #{params.userId})) AS idArr) TEMP WHERE FIND_IN_SET(id, TEMP.idArr)
+        OR id = (SELECT dept_id FROM `sys_user` WHERE id= #{params.userId}))
+        ) OR (bt.inspect_user_id = #{params.userId} )
+        ) bb  WHERE
+        <if test="params.year!=null">
+             YEAR(bb.`create_date`) = #{params.year} and
+        </if>
+        <if test="params.quarter!=null">
+             QUARTER(bb.`create_date`) = #{params.quarter} and
+        </if>
+        <if test="params.month!=null">
+             MONTH(bb.`create_date`) = #{params.month} and
+        </if>
+        <if test="params.week!=null">
+             WEEK(bb.`create_date`) = #{params.week} and
+        </if>
+        bb.inspection_list_id IS NOT NULL AND bb.pass_status=0
+        GROUP BY bb.inspection_list_id  ORDER BY number DESC
+        )aa
+        ) c
+        <where>
+            <if test="params.lastRowNum!=null">
+             c.rownum > ${params.lastRowNum}
+            </if>
+            <if test="params.pageSize!=null">
+             LIMIT ${params.pageSize}
+            </if>
+        </where>
+    </select>
+</mapper>

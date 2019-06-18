@@ -1,0 +1,11 @@
+version: '2'
+services:
+  smog-admin:
+    image: smog/admin
+    container_name: smog-admin
+    restart: always
+    ports:
+    - "8091:8091"
+    environment:
+    - spring.profiles.active=dev
+

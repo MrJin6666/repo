@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.modules.companymanagesystem.dao.CompanyManageSystemDao">
+
+    <resultMap type="com.goboosoft.modules.companymanagesystem.entity.CompanyManageSystemEntity" id="companyManageSystemMap">
+        <result property="id" column="id"/>
+        <result property="noticeName" column="notice_name"/>
+        <result property="creatorName" column="creator_name"/>
+        <result property="noticeContent" column="notice_content"/>
+        <result property="attachment" column="attachment"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+        <result property="isCompany" column="is_company"/>
+        <result property="state" column="state"/>
+        <result property="iconUri" column="icon_uri"/>
+        <result property="deptId" column="dept_id"/>
+    </resultMap>
+
+    <select id="findPageList" resultType="com.goboosoft.modules.companymanagesystem.dto.CompanyManageSystemDTO">
+        SELECT b.* FROM sys_dept a
+        INNER JOIN (SELECT getDeptFatherList (#{params.deptId}) AS idArr) TEMP
+        join company_manage_system b on a.id = b.dept_id
+        WHERE
+	    (a.id = #{params.deptId} or
+	    FIND_IN_SET(a.id, TEMP.idArr) or b.creator = #{params.userId}) and b.is_company = 1
+	    <if test="params.noticeName != null and params.noticeName != ''">
+            and b.notice_name like "%"#{params.noticeName}"%"
+        </if>
+        <if test="params.type != null and params.type != ''">
+            and b.type = #{params.type}
+        </if>
+    </select>
+
+</mapper>

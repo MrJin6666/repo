@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.company.busininspect.dao.BusinInspectionCorrectionMxDao">
+
+    <resultMap type="com.goboosoft.company.busininspect.entity.BusinInspectionCorrectionMxEntity" id="businInspectionCorrectionMxMap">
+        <result property="id" column="id"/>
+        <result property="inspectionCorrectionId" column="inspection_correction_id"/>
+        <result property="inspectionTaskItemId" column="inspection_task_item_id"/>
+        <result property="inspectionTaskItemName" column="inspection_task_item_name"/>
+        <result property="problemDescription" column="problem_description"/>
+        <result property="photos" column="photos"/>
+        <result property="inspectionListId" column="inspection_list_id"/>
+        <result property="inspectionListName" column="inspection_list_name"/>
+        <result property="correctionStatus" column="correction_status"/>
+        <result property="correctionUserId" column="correction_user_id"/>
+        <result property="correctionName" column="correction_name"/>
+        <result property="correctionDate" column="correction_date"/>
+        <result property="finishRemark" column="finish_remark"/>
+        <result property="finishPhotos" column="finish_photos"/>
+        <result property="underwrite" column="underwrite"/>
+        <result property="checkRemark" column="check_remark"/>
+        <result property="checkPhotos" column="check_photos"/>
+        <result property="checkUnderwrite" column="check_underwrite"/>
+        <result property="checkUserId" column="check_user_id"/>
+        <result property="checkUserName" column="check_user_name"/>
+    </resultMap>
+
+
+</mapper>

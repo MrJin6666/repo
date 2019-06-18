@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.modules.supervisionandinspection.dao.BusinInspectionTaskItemContentDao">
+
+    <resultMap type="com.goboosoft.modules.supervisionandinspection.entity.BusinInspectionTaskItemContentEntity" id="businInspectionTaskItemContentMap">
+        <result property="id" column="id"/>
+        <result property="inspectionTaskItemId" column="inspection_task_item_id"/>
+        <result property="inspectionListId" column="inspection_list_id"/>
+        <result property="inspectionListName" column="inspection_list_name"/>
+        <result property="score" column="score"/>
+        <result property="totalScore" column="total_score"/>
+        <result property="passStatus" column="pass_status"/>
+    </resultMap>
+
+</mapper>

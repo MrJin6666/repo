@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.company.managesystem.dao.CompanyManageSystemDao">
+
+    <resultMap type="com.goboosoft.company.managesystem.entity.CompanyManageSystemEntity" id="companyManageSystemMap">
+        <result property="id" column="id"/>
+        <result property="noticeName" column="notice_name"/>
+        <result property="creatorName" column="creator_ame"/>
+        <result property="noticeContent" column="notice_content"/>
+        <result property="attachment" column="attachment"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+        <result property="isCompany" column="is_company"/>
+        <result property="companyId" column="company_id"/>
+        <result property="iconUri" column="icon_uri"/>
+        <result property="deptId" column="dept_id"/>
+        <result property="state" column="state"/>
+    </resultMap>
+
+    <select id="pageList" resultType="com.goboosoft.company.managesystem.dto.CompanyManageSystemDTO">
+        SELECT b.* FROM sys_dept a
+        INNER JOIN (SELECT getDeptFatherList (#{params.deptId}) AS idArr) TEMP
+        join company_manage_system b on a.id = b.dept_id
+        WHERE
+        (a.id = #{params.deptId} or
+        FIND_IN_SET(a.id, TEMP.idArr))
+        and b.is_company = #{params.type}
+        <if test="params.noticeName != null and params.noticeName != ''">
+            and b.notice_name like "%"#{params.noticeName}"%"
+        </if>
+        order by b.create_date desc
+    </select>
+
+    <select id="deptNoticeList" resultType="com.goboosoft.company.managesystem.entity.CompanyManageSystemEntity">
+        SELECT b.* FROM sys_dept a
+        INNER JOIN (SELECT getDeptFatherList (#{params.deptId}) AS idArr) TEMP
+        join company_manage_system b on a.id = b.dept_id
+        WHERE
+        (a.id = #{params.deptId} or
+        FIND_IN_SET(a.id, TEMP.idArr))
+        and b.is_company = #{params.type}
+        <if test="params.noticeName != null and params.noticeName != ''">
+            and b.notice_name like "%"#{params.noticeName}"%"
+        </if>
+    </select>
+
+    <select id="getDeptIdByCompanyId" resultType="com.goboosoft.company.managesystem.entity.CompanyManageSystemEntity">
+        select * from company_manage_system
+        where company_id = #{companyId}
+        and state = '0'
+    </select>
+
+    <select id="getSysCompanyInfo" resultType="com.goboosoft.company.managesystem.dto.CompanyManageSystemDTO">
+
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        select m.* from company_manage_system m
+
+        <where>
+             <if test="params.isCompany ==0">
+                 m.company_id = #{params.companyId}
+             </if>
+        </where>
+             <if test="params.isCompany == 1">
+                 ,
+                 (SELECT * FROM sys_dept a
+                 INNER JOIN (SELECT getDeptFatherList (#{params.xgdw}) AS idArr) TEMP
+                 WHERE
+                 a.id = #{params.xgdw} or
+                 FIND_IN_SET(a.id, TEMP.idArr)) n where m.dept_id = n.id
+             </if>
+        and m.state = '0' and m.type = 0
+        )aa
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+    </select>
+
+    <select id="getIndustryInfo" resultType="com.goboosoft.company.managesystem.dto.CompanyManageSystemDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        SELECT * FROM `company_manage_system` WHERE dept_id IN (
+        SELECT id FROM sys_dept JOIN (SELECT getDeptChildList((SELECT dept_id FROM `sys_user` WHERE id= #{params.userId}))
+        AS idArr) TEMP WHERE FIND_IN_SET(id, TEMP.idArr)
+        OR id = (SELECT dept_id FROM `sys_user` WHERE id= #{params.userId})) AND TYPE =0
+
+        )aa
+        ) c
+        <where>
+            <if test="params.lastRowNum != null and params.lastRowNum != ''">
+                c.rownum > ${params.lastRowNum}
+            </if>
+            <if test="params.pageSize != null and params.pageSize != ''">
+                LIMIT ${params.pageSize}
+            </if>
+        </where>
+    </select>
+    <select id="getNoticeItemById" resultType="com.goboosoft.company.managesystem.entity.CompanyManageSystemEntity">
+        select * from company_manage_system
+        where id = #{params.id}
+
+    </select>
+
+    <update id="deleteNoticeItem">
+        update company_manage_system
+        set state = 1
+        where id = #{id}
+    </update>
+
+    <select id="getDetail" parameterType="java.lang.Long" resultType="com.goboosoft.company.managesystem.dto.CompanyManageSystemDTO">
+        select m.* ,n.real_name as name from company_manage_system m left join sys_user n on m.creator = n.id where m.id =  #{id}
+    </select>
+</mapper>
+
+<!-- where creator = #{"creator"}-->

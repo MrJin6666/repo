@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.industry.multiple.dao.IndustryTaskListSelectDao">
+    <!-- 查询新任务发出列表-->
+    <select id="getSendList"  resultType="com.goboosoft.industry.multiple.dto.IndustryTaskListSelectDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+        select * from (
+        SELECT tl.id,tl.status,tl.create_Date,tl.title,tl.order_number,tl.receiver_id,su1.real_name receiverName,su1.mobile receiverMobile,latest_completion_time,tl.creator,su.real_name creator_name,su.mobile creator_mobile
+        FROM industry_task_list tl
+        left join sys_user su on su.id=tl.creator
+        left join sys_user su1 on su1.id=tl.receiver_id
+        left JOIN industry_task_log tg on  tl.id = tg.industry_task_id
+        where tl.`creator`=#{params.userId}
+        ) bb
+        GROUP BY bb.`order_number` ORDER BY bb.create_Date DESC
+        )aa
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+    </select>
+    <!-- 查询新任务接收列表-->
+    <select id="getReceiveList"  resultType="com.goboosoft.industry.multiple.dto.IndustryTaskListSelectDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+        select * from (
+        SELECT tl.id,tl.status,tl.create_Date,tl.title,tl.order_number,tl.receiver_id,su1.real_name receiver_name,su1.mobile receiver_mobile,latest_completion_time,tl.creator,su.real_name creator_name,su.mobile creator_mobile,IF(tl.latest_completion_time &lt; NOW(),1,0) isoverdue
+        FROM
+        (select itl.* from industry_task_list itl where
+
+        0 =(SELECT is_dept_head FROM `sys_user` WHERE id=#{params.userId})
+        AND
+        itl.js_dept_id IN (
+        SELECT id FROM `sys_dept` WHERE pids LIKE CONCAT('%',(SELECT dept_id FROM `sys_user` WHERE id=#{params.userId}),'%')
+        OR id=(SELECT dept_id FROM `sys_user` WHERE id=#{params.userId})
+        ) OR (
+        itl .`receiver_id`=#{params.userId}
+        )
+        ) tl
+        left join sys_user su on su.id=tl.creator
+        left join sys_user su1 on su1.id=tl.receiver_id
+        left join industry_task_log tg ON tl.id = tg.industry_task_id
+        where tl.`receiver_id`=#{params.userId}
+        ) bb
+        WHERE bb.status IN(0,1,3,4)
+        GROUP BY bb.`order_number` ORDER BY bb.status ,bb.isoverdue DESC, bb.create_Date DESC
+        )aa
+        ) c
+        <where>
+            <if test="params.lastRowNum!=null">
+        c.rownum > ${params.lastRowNum}
+            </if>
+            <if test="params.pageSize!=null">
+        LIMIT ${params.pageSize}
+            </if>
+        </where>
+    </select>
+    <!-- 查询新任务待确认列表-->
+    <select id="getBeConfirmedList"  resultType="com.goboosoft.industry.multiple.dto.IndustryTaskListSelectDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+        select * from (
+        SELECT tl.id,tl.status,tl.create_Date,tl.title,tl.order_number,tl.receiver_id,su1.real_name receiver_name,su1.mobile receiver_mobile,latest_completion_time,tl.creator,su.real_name creator_name,su.mobile creator_mobile,1 AS isDismissed
+        FROM
+        (select itl.* from industry_task_list itl where
+
+        0 =(SELECT is_dept_head FROM `sys_user` WHERE id=#{params.userId})
+        AND
+        itl.fc_dept_id IN (
+        SELECT id FROM `sys_dept` WHERE pids LIKE CONCAT('%',(SELECT dept_id FROM `sys_user` WHERE id=#{params.userId}),'%')
+        OR id=(SELECT dept_id FROM `sys_user` WHERE id=#{params.userId})
+        ) OR (
+        itl .`creator`=#{params.userId}
+        )
+        ) tl
+        left join sys_user su on su.id=tl.creator
+        left join sys_user su1 on su1.id=tl.receiver_id
+        left join industry_task_log tg ON tl.id = tg.industry_task_id
+        where tl.`receiver_id`=#{params.userId}
+        ) bb
+        WHERE bb.status in(2)
+        GROUP BY bb.`order_number` ORDER BY bb.create_Date DESC
+        )aa
+        ) c
+        <where>
+            <if test="params.lastRowNum!=null">
+                c.rownum > ${params.lastRowNum}
+            </if>
+            <if test="params.pageSize!=null">
+                LIMIT ${params.pageSize}
+            </if>
+        </where>
+    </select>
+    <!-- 查询新任务待处理超期已完成列表-->
+    <select id="getHomePageList"  resultType="com.goboosoft.industry.multiple.dto.IndustryTaskListSelectDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+        select * from (
+         SELECT tl.id,tl.status,tl.create_Date,tl.title,tl.order_number,tl.receiver_id,su1.real_name receiver_name,su1.mobile receiver_mobile,latest_completion_time,tl.creator,su.real_name creator_name,su.mobile creator_mobile
+        FROM
+        (select itl.* from industry_task_list itl where
+
+        0 =(SELECT is_dept_head FROM `sys_user` WHERE id=#{params.userId})
+        AND
+        itl.js_dept_id IN (
+        SELECT id FROM `sys_dept` WHERE pids LIKE CONCAT('%',(SELECT dept_id FROM `sys_user` WHERE id=#{params.userId}),'%')
+        OR id=(SELECT dept_id FROM `sys_user` WHERE id=#{params.userId})
+        ) OR (
+        itl .`receiver_id`=#{params.userId}
+        )
+        ) tl
+        left join sys_user su on su.id=tl.creator
+        left join sys_user su1 on su1.id=tl.receiver_id
+        left join industry_task_log tg ON tl.id = tg.industry_task_id
+        where tl.`receiver_id`=#{params.userId}
+        ORDER BY tg.`status` desc
+        ) bb
+        GROUP BY bb.`order_number` ORDER BY bb.create_Date DESC
+        )aa where
+        <if test="params.status==0">
+              aa.status in(0,1)
+        </if>
+        <if test="params.status==3">
+              aa.status =3
+        </if>
+         <if test="params.status==5">
+              aa.latest_completion_time <![CDATA[ <= ]]>now()
+        </if>
+        ) c
+        <where>
+        <if test="params.lastRowNum!=null">
+            c.rownum > ${params.lastRowNum}
+        </if>
+        <if test="params.pageSize!=null">
+        LIMIT ${params.pageSize}
+        </if>
+        </where>
+    </select>
+</mapper>

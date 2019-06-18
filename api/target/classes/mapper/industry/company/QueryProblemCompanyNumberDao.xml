@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.industry.company.dao.QueryProblemCompanyNumberDao">
+
+    <select id="queryRedCard" parameterType="java.lang.Long" resultType="java.lang.Integer">
+
+
+  SELECT COUNT(*) FROM
+(SELECT DISTINCT t1.`id` companyId ,t1.`name` companyName ,t1.`linkman`,t1.`linkman_phone`,t1.`address`,t1.`create_date` createDate,t1.`check_status` checkStatus
+        FROM sys_company t1, sys_dept t3
+        WHERE
+        t1.`company_type`=0  AND t1.`xgdw`=t3.`id`AND t1.`status`=1  AND t1.`check_status`=0 AND ISNULL(t1.user_id) AND t1.xgdw =(SELECT dept_id FROM `sys_user` WHERE id=  #{userId})
+
+
+        UNION
+
+SELECT  DISTINCT t1.`id` companyId ,t1.`name` companyName ,t1.`linkman`,t1.`linkman_phone`,t1.`address`,t1.`create_date` createDate,t1.`check_status` checkStatus
+        FROM sys_company t1,
+        (
+	        SELECT * FROM sys_user t WHERE(
+				0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{userId})
+				AND
+				t.dept_id IN (
+				 SELECT id FROM sys_dept JOIN (SELECT getDeptChildList((SELECT dept_id FROM `sys_user` WHERE id=  #{userId})) AS idArr) TEMP WHERE FIND_IN_SET(id, TEMP.idArr)
+		                 OR id = (SELECT dept_id FROM `sys_user` WHERE id=  #{userId})
+
+					 ) OR (
+						t.id = #{userId}
+						)
+				                           )
+        ) t2, sys_dept t3
+  WHERE
+    t1.`status`=1 AND t1.`company_type`=0  AND t2.`dept_id`=t3.`id` AND t1.`user_id`=t2.`id` AND t1.`check_status`=0) tt
+
+    </select>
+
+	<select id="queryYellowCard" parameterType="java.lang.Long" resultType="java.lang.Integer">
+
+
+ SELECT COUNT(*) FROM
+(SELECT DISTINCT t1.`id` companyId ,t1.`name` companyName ,t1.`linkman`,t1.`linkman_phone`,t1.`address`,t1.`create_date` createDate,t1.`check_status` checkStatus
+        FROM sys_company t1, sys_dept t3
+        WHERE
+        t1.`company_type`=0  AND t1.`xgdw`=t3.`id`AND t1.`status`=1  AND t1.`check_status`=1 AND ISNULL(t1.user_id) AND t1.xgdw =(SELECT dept_id FROM `sys_user` WHERE id=  #{userId})
+
+
+        UNION
+
+SELECT  DISTINCT t1.`id` companyId ,t1.`name` companyName ,t1.`linkman`,t1.`linkman_phone`,t1.`address`,t1.`create_date` createDate,t1.`check_status` checkStatus
+        FROM sys_company t1,
+        (
+	        SELECT * FROM sys_user t WHERE(
+				0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{userId})
+				AND
+				t.dept_id IN (
+				 SELECT id FROM sys_dept JOIN (SELECT getDeptChildList((SELECT dept_id FROM `sys_user` WHERE id=  #{userId})) AS idArr) TEMP WHERE FIND_IN_SET(id, TEMP.idArr)
+		                 OR id = (SELECT dept_id FROM `sys_user` WHERE id=  #{userId})
+
+					 ) OR (
+						t.id = #{userId}
+						)
+				                           )
+        ) t2, sys_dept t3
+  WHERE
+    t1.`status`=1 AND t1.`company_type`=0  AND t2.`dept_id`=t3.`id` AND t1.`user_id`=t2.`id` AND t1.`check_status`=1) tt
+
+
+    </select>
+
+	<select id="queryOrdinaryCard" parameterType="java.lang.Long" resultType="java.lang.Integer">
+
+
+ SELECT COUNT(*) FROM
+(SELECT DISTINCT t1.`id` companyId ,t1.`name` companyName ,t1.`linkman`,t1.`linkman_phone`,t1.`address`,t1.`create_date` createDate,t1.`check_status` checkStatus
+        FROM sys_company t1, sys_dept t3
+        WHERE
+        t1.`company_type`=0  AND t1.`xgdw`=t3.`id`AND t1.`status`=1  AND t1.`check_status`=2 AND ISNULL(t1.user_id) AND t1.xgdw =(SELECT dept_id FROM `sys_user` WHERE id=  #{userId})
+
+
+        UNION
+
+SELECT  DISTINCT t1.`id` companyId ,t1.`name` companyName ,t1.`linkman`,t1.`linkman_phone`,t1.`address`,t1.`create_date` createDate,t1.`check_status` checkStatus
+        FROM sys_company t1,
+        (
+	        SELECT * FROM sys_user t WHERE(
+				0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{userId})
+				AND
+				t.dept_id IN (
+				 SELECT id FROM sys_dept JOIN (SELECT getDeptChildList((SELECT dept_id FROM `sys_user` WHERE id=  #{userId})) AS idArr) TEMP WHERE FIND_IN_SET(id, TEMP.idArr)
+		                 OR id = (SELECT dept_id FROM `sys_user` WHERE id= #{userId})
+
+					 ) OR (
+						t.id = #{userId}
+						)
+				                           )
+        ) t2, sys_dept t3
+  WHERE
+    t1.`status`=1 AND t1.`company_type`=0  AND t2.`dept_id`=t3.`id` AND t1.`user_id`=t2.`id` AND t1.`check_status`=2) tt
+
+    </select>
+
+</mapper>

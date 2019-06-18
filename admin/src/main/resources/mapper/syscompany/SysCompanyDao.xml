@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.modules.syscompany.dao.SysCompanyDao">
+
+    <resultMap type="com.goboosoft.modules.syscompany.entity.SysCompanyEntity" id="sysCompanyMap">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="code" column="code"/>
+        <result property="adrProvince" column="adr_province"/>
+        <result property="adrCity" column="adr_city"/>
+        <result property="adrArea" column="adr_area"/>
+        <result property="adrStreet" column="adr_street"/>
+        <result property="adrCommunity" column="adr_community"/>
+        <result property="adrRoad" column="adr_road"/>
+        <result property="lng" column="lng"/>
+        <result property="lat" column="lat"/>
+        <result property="status" column="status"/>
+        <result property="companyType" column="company_type"/>
+        <result property="xgdw" column="xgdw"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updater" column="updater"/>
+        <result property="updateDate" column="update_date"/>
+    </resultMap>
+
+    <select id="findPageList" resultType="com.goboosoft.modules.syscompany.dto.SysCompanyDTO">
+        select b.*,a.name AS deptName,a.principal_name,
+        (select count(*) from conmpany_inspect where list_id = 1103472282774237185  and company_id = b.id) as pkqfNum,
+        (select count(*) from conmpany_inspect where list_id = 1103472282774237186  and company_id = b.id) as tqNum,
+        (select count(*) from conmpany_inspect where list_id = 1103472282774237187  and company_id = b.id) as dmNum,
+        (select count(*) from conmpany_inspect where list_id = 1103484049910902788  and company_id = b.id) as wfNum
+        from
+        (
+        select * from sys_dept
+        join (select getDeptChildList(#{params.deptId}) as idArr) TEMP where (FIND_IN_SET(id, TEMP.idArr)
+        <if test="params.isDeptHead == 0">
+            or id = #{params.deptId}
+        </if>
+
+        ) and is_com = 0
+        ) a
+        join sys_company b on a.id = b.xgdw
+
+        <where>
+            <if test="params.companyName != null and params.companyName != ''">
+                and b.name like "%"#{params.name}"%"
+            </if>
+            <if test="params.deptName != null and params.deptName != ''">
+                and a.name like "%"#{params.deptName}"%"
+            </if>
+            <if test="params.status != null and params.status != ''">
+                and b.status = #{params.status}
+            </if>
+        </where>
+
+    </select>
+
+
+    <select id="findInspectionNum" resultType="com.goboosoft.modules.syscompany.dto.SysCompanyDTO">
+         select
+        (select count(*) from conmpany_inspect where list_id = 1103472282774237185  and company_id = #{companyId}) as pkqfNum,
+        (select count(*) from conmpany_inspect where list_id = 1103472282774237186  and company_id = #{companyId}) as tqNum,
+        (select count(*) from conmpany_inspect where list_id = 1103472282774237187  and company_id = #{companyId}) as dmNum,
+        (select count(*) from conmpany_inspect where list_id = 1103484049910902788  and company_id = #{companyId}) as wfNum
+
+    </select>
+
+
+    <select id="pageScreenList" resultType="map">
+        select a.name,
+        (select count(*) from company_manage_log where type = '2' and result = '0' and company_id = a.id) as redNum,
+        (select count(*) from company_manage_log where type = '1' and result = '0' and company_id = a.id) as yellowNum
+         from sys_company a where company_type = '0' and status = 1
+    </select>
+
+</mapper>

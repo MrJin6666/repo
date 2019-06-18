@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.company.wastemanagement.dao.WasteTypeDao">
+
+    <resultMap type="com.goboosoft.company.wastemanagement.entity.WasteTypeEntity" id="companyWasteTypeMap">
+        <result property="id" column="id"/>
+        <result property="wasteTypeDir" column="waste_type_dir"/>
+        <result property="nameDir" column="name_dir"/>
+        <result property="unitDir" column="unit_dir"/>
+        <result property="sourceDir" column="source_dir"/>
+        <result property="saveDir" column="save_dir"/>
+        <result property="receiveUnitDir" column="receive_unit_dir"/>
+        <result property="directionDir" column="direction_dir"/>
+        <result property="deptDir" column="dept_dir"/>
+        <result property="companyId" column="company_id"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+    <select id="wasteContentTypeList" resultType="com.goboosoft.company.wastemanagement.entity.WasteTypeEntity">
+        select * from company_waste_type
+        where company_id = #{companyId}
+    </select>
+
+    <!--更新数据库-->
+    <update id="inUpdateWasteType" parameterType="com.goboosoft.company.wastemanagement.dto.WasteTypeDTO">
+        update company_waste_type
+        <set>
+            <if test="wasteTypeDir != null and wasteTypeDir != '' ">
+                waste_type_dir= #{wasteTypeDir},
+            </if>
+            <if test="nameDir != null and nameDir != '' ">
+                name_dir=#{nameDir},
+            </if>
+            <if test="unitDir != null and unitDir != '' ">
+                unit_dir=#{unitDir},
+            </if>
+            <if test="sourceDir != null and sourceDir != '' ">
+                source_dir= #{sourceDir},
+            </if>
+            <if test="saveDir != null and saveDir != '' ">
+                save_dir=#{saveDir},
+            </if>
+        </set>
+        WHERE company_id = #{companyId}
+    </update>
+
+    <update id="outUpdateWasteType" parameterType="com.goboosoft.company.wastemanagement.dto.WasteTypeDTO" >
+        update company_waste_type
+        <set>
+            <if test="wasteTypeDir != null and wasteTypeDir != '' ">
+                waste_type_dir= #{wasteTypeDir},
+            </if>
+            <if test="nameDir != null and nameDir != '' ">
+                name_dir=#{nameDir},
+            </if>
+            <if test="unitDir != null and unitDir != '' ">
+                unit_dir=#{unitDir},
+            </if>
+            <if test="receiveUnitDir != null and receiveUnitDir != '' ">
+                receive_unit_dir=#{receiveUnitDir},
+            </if>
+            <if test="deptDir != null and deptDir != '' ">
+                dept_dir=#{deptDir},
+            </if>
+            <if test="directionDir != null and directionDir != '' ">
+                direction_dir=#{directionDir},
+            </if>
+        </set>
+
+        WHERE company_id = #{companyId}
+    </update>
+
+</mapper>

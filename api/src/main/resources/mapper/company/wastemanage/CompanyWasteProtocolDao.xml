@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.company.wastemanagement.dao.WasteProtocolDao">
+
+    <resultMap type="com.goboosoft.company.wastemanagement.entity.WasteProtocolEntity" id="companyWasteProtocolMap">
+        <result property="id" column="id"/>
+        <result property="protocolName" column="protocol_name"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="content" column="content"/>
+        <result property="companyId" column="company_id"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+    <select id="protocolShowList" resultType="com.goboosoft.company.wastemanagement.entity.WasteProtocolEntity">
+        select * from company_waste_protocol
+        where company_id = #{companyId}
+    </select>
+
+    <select id="wasteProtocolLastTime" resultType="java.util.Date">
+        SELECT MAX(end_date) FROM company_waste_protocol
+        WHERE company_id = #{companyId}
+    </select>
+
+</mapper>

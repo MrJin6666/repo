@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.industry.supervisionandinspection.dao.BusinInspectionTaskDao">
+
+    <resultMap type="com.goboosoft.industry.supervisionandinspection.entity.BusinInspectionTaskEntity" id="businInspectionTaskMap">
+        <result property="id" column="id"/>
+        <result property="companyId" column="company_id"/>
+        <result property="companyName" column="company_name"/>
+        <result property="inspectUserId" column="inspect_user_id"/>
+        <result property="inspectUserName" column="inspect_user_name"/>
+        <result property="accompanyUserIds" column="accompany_user_ids"/>
+        <result property="accompanyUserNames" column="accompany_user_names"/>
+        <result property="inspectDate" column="inspect_date"/>
+        <result property="correctionUserId" column="correction_user_id"/>
+        <result property="correctionUserName" column="correction_user_name"/>
+        <result property="passStatus" column="pass_status"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updater" column="updater"/>
+        <result property="updateDate" column="update_date"/>
+        <result property="tickets" column="tickets"/>
+    </resultMap>
+
+    <resultMap id="correctionContent" type="com.goboosoft.industry.supervisionandinspection.dto.CorrectionInfoDTO">
+        <result property="inspectionTaskItemName" column="inspection_task_item_name"/>
+        <collection property="correctionContentList" ofType="com.goboosoft.industry.supervisionandinspection.dto.CorrectionContent" javaType="java.util.List">
+            <result property="id" column="id"/>
+            <result property="status" column="status"/>
+            <result property="inspectionListName" column="inspection_list_name"/>
+        </collection>
+    </resultMap>
+
+    <select id="getInspectionListByCompanyId" resultType="com.goboosoft.industry.supervisionandinspection.dto.InspectionDTO">
+        SELECT bil.name,bil.id,bil.total_score FROM
+        (SELECT ci.list_id FROM conmpany_inspect ci WHERE ci.company_id =#{companyId}) cis
+        LEFT JOIN basic_inspection_list bil ON cis.list_id = bil.id
+        where LEVEL =0
+    </select>
+
+    <select id="getInspectionListByPid" resultType="com.goboosoft.industry.supervisionandinspection.dto.InspectionDTO">
+         SELECT bil.id,bil.name,bil.total_score FROM basic_inspection_list bil WHERE bil.pid=#{pid}  AND LEVEL=1
+    </select>
+
+    <select id="getList" resultType="com.goboosoft.industry.supervisionandinspection.dto.BusinInspectionTaskListDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        SELECT * FROM busin_inspection_task bt WHERE
+        (0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{params.userId})
+        AND
+        bt.dept_id IN (SELECT id FROM `sys_dept` WHERE pids LIKE CONCAT('%',(SELECT dept_id FROM `sys_user` WHERE id=#{params.userId}),'%') )
+        ) OR (bt.inspect_user_id = #{params.userId}) order by inspect_date desc
+
+        )aa
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+    </select>
+
+    <select id="getCorrectionList" resultType="com.goboosoft.industry.supervisionandinspection.dto.CorrectionListDTO">
+          SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+
+        SELECT bic.id,bic.company_name,bic.inspection_task_id,bic.inspection_user_name,bic.inspection_date,bic.last_correction_date,IF(bic.last_correction_date <![CDATA[ < ]]>now(),0,1) STATUS,a.tickets FROM
+        (SELECT * FROM busin_inspection_task bt WHERE
+        (0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{params.userId})
+        AND
+        bt.dept_id IN (SELECT id FROM `sys_dept` WHERE pids LIKE CONCAT('%',(SELECT dept_id FROM `sys_user` WHERE id= #{params.userId}),'%') )
+        AND bt.pass_status=0 AND bt.status= 4
+        ) OR (bt.inspect_user_id =  #{params.userId} AND bt.pass_status=0 AND bt.status= 4 )
+        ) a LEFT JOIN busin_inspection_correction bic ON bic.inspection_task_id = a.id WHERE  bic.status=0
+        order by bic.last_correction_date desc
+
+
+        )aa
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+    </select>
+
+    <select id="getCorrectionContent" resultMap="correctionContent">
+      SELECT bicm.id,bicm.inspection_task_item_name,bicm.inspection_list_name
+      <if test="type==2">
+      ,IF(bicm.correction_status =1,0,1) status
+      </if>
+      FROM busin_inspection_correction_mx bicm WHERE bicm.inspection_correction_id =#{id}
+    </select>
+
+    <select id="getCorrectionContentInfo" resultType="com.goboosoft.industry.supervisionandinspection.dto.CorrectionDTO">
+        SELECT bicm.id,bi.tickets,bicm.inspection_list_name `name`,bic.inspection_user_name,
+        bic.last_correction_date,bicm.photos,bicm.problem_description,bi.underwrite
+        FROM (SELECT * FROM busin_inspection_correction_mx WHERE id=#{id}) bicm
+        LEFT JOIN busin_inspection_correction bic ON bicm.inspection_correction_id = bic.id
+        LEFT JOIN busin_inspection_task bi ON bi.id =bic.inspection_task_id
+    </select>
+
+    <select id="getCheckList" resultType="com.goboosoft.industry.supervisionandinspection.dto.CheckListDTO">
+          SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        SELECT bic.id,bic.company_name,bic.inspection_task_id,a.tickets,bic.correction_user_name,bic.correction_date,bic.inspection_user_name,bic.inspection_date FROM
+        (SELECT * FROM busin_inspection_task bt WHERE
+        (0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{params.userId})
+        AND
+        bt.dept_id IN (SELECT id FROM `sys_dept` WHERE pids LIKE CONCAT('%',(SELECT dept_id FROM `sys_user` WHERE id= #{params.userId}),'%') )
+        AND bt.pass_status=0 AND bt.status= 4
+        ) OR (bt.inspect_user_id =  #{params.userId} AND bt.pass_status=0 AND bt.status= 4 )
+        ) a LEFT JOIN busin_inspection_correction bic ON bic.inspection_task_id = a.id WHERE  bic.status=1
+        order by bic.check_date desc
+
+        )aa
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+    </select>
+
+    <select id="getCheckContentInfo" resultType="com.goboosoft.industry.supervisionandinspection.dto.CheckDTO">
+        SELECT bicm.id,bicm.correction_date,bicm.finish_remark,bicm.finish_photos,bicm.underwrite,bic.correction_user_name,
+        CONCAT(bicm.inspection_task_item_name,"(",bicm.inspection_list_name,")") `name`
+        FROM (SELECT * FROM busin_inspection_correction_mx WHERE id=#{id})bicm
+        LEFT JOIN busin_inspection_correction bic ON bicm.inspection_correction_id = bic.id
+    </select>
+
+
+    <select id="getReportList" resultType="com.goboosoft.industry.supervisionandinspection.dto.ReportDTO">
+          SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        <if test="params.companyId==null or params.companyId==''">
+        SELECT a.id,a.company_name,sd.name dept_name,a.inspect_date,a.finish_date,if(a.accompany_user_names='',a.inspect_user_name,CONCAT(a.inspect_user_name,',',a.accompany_user_names)) inspect_user_name,a.score,bic.correction_user_name  FROM
+        (SELECT * FROM busin_inspection_task bt WHERE
+        (0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{params.userId})
+        AND
+        bt.dept_id IN (SELECT id FROM `sys_dept` WHERE pids LIKE CONCAT('%',(SELECT dept_id FROM `sys_user` WHERE id= #{params.userId}),'%') )
+        AND bt.status= 5
+        ) OR (bt.inspect_user_id =  #{params.userId} AND bt.status= 5 )
+        ) a LEFT JOIN (select * from busin_inspection_correction WHERE pid=0) bic ON bic.inspection_task_id = a.id
+        LEFT JOIN sys_dept sd ON a.dept_id =sd.id order by a.finish_date desc
+        </if>
+
+        <if test="params.companyId!=null and params.companyId!=''">
+        SELECT a.id,a.company_name,sd.name dept_name,a.inspect_date,a.finish_date,if(a.accompany_user_names='',a.inspect_user_name,CONCAT(a.inspect_user_name,',',a.accompany_user_names)) inspect_user_name,a.score,bic.correction_user_name  FROM
+        (SELECT * FROM busin_inspection_task bt WHERE company_id=#{params.companyId} AND bt.status= 5 ) a
+        LEFT JOIN (select * from busin_inspection_correction WHERE pid=0) bic ON bic.inspection_task_id = a.id
+        LEFT JOIN sys_dept sd ON a.dept_id =sd.id order by a.finish_date desc
+        </if>
+
+         )aa
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+    </select>
+
+    <select id="getReportListByCompanyId" resultType="com.goboosoft.industry.supervisionandinspection.dto.ReportDTO">
+          SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        SELECT a.id,a.company_name,sd.name dept_name,a.inspect_date,a.finish_date,if(a.accompany_user_names='',a.inspect_user_name,CONCAT(a.inspect_user_name,',',a.accompany_user_names)) inspect_user_name,a.score,bic.correction_user_name  FROM
+        (SELECT * FROM busin_inspection_task bt WHERE bt.company_id = #{params.companyId} AND bt.status= 5) a
+        LEFT JOIN (select * from busin_inspection_correction WHERE pid=0) bic ON bic.inspection_task_id = a.id
+        LEFT JOIN sys_dept sd ON a.dept_id =sd.id order by a.finish_date
+
+         )aa
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+    </select>
+
+    <select id="getReportInfo" resultType="com.goboosoft.industry.supervisionandinspection.dto.ReportInfoDTO">
+        SELECT bi.score,bi.pass_status,bi.tickets,if(bi.accompany_user_names='',bi.inspect_user_name,CONCAT(bi.inspect_user_name,',',bi.accompany_user_names)) inspect_user_name,
+        bi.inspect_date,bi.finish_date,bic.correction_user_name,bi.underwrite inspect_underwrite,bic.check_underwrite,bic.correction_underwrite,bic.check_user_name
+        FROM (SELECT * FROM busin_inspection_task WHERE id=#{id}) bi
+        LEFT JOIN (select * from busin_inspection_correction where pid=0) bic ON bi.id=bic.inspection_task_id
+    </select>
+
+    <select id="getInspectionCountByCompanyId" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM busin_inspection_task bt
+        WHERE bt.company_id = #{companyId} AND bt.status= 5
+    </select>
+
+    <select id="getCheckCountByUserId" resultType="java.lang.Integer">
+         SELECT COUNT(1) FROM
+        (SELECT * FROM busin_inspection_task bt WHERE
+        (0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{userId})
+        AND
+        bt.dept_id IN (SELECT id FROM `sys_dept` WHERE pids LIKE CONCAT('%',(SELECT dept_id FROM `sys_user` WHERE id= #{userId}),'%') )
+        AND bt.pass_status=0 AND bt.status= 4
+        ) OR (bt.inspect_user_id =  #{userId} AND bt.pass_status=0 AND bt.status= 4 )
+        ) a LEFT JOIN busin_inspection_correction bic ON bic.inspection_task_id = a.id WHERE  bic.status=1
+   </select>
+
+    <select id="getCorrectionCountByUserId" resultType="java.lang.Integer">
+         SELECT COUNT(1)  FROM
+        (SELECT * FROM busin_inspection_task bt WHERE
+        (0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{userId})
+        AND
+        bt.dept_id IN (SELECT id FROM `sys_dept` WHERE pids LIKE CONCAT('%',(SELECT dept_id FROM `sys_user` WHERE id= #{userId}),'%') )
+        AND bt.pass_status=0 AND bt.status= 4
+        ) OR (bt.inspect_user_id =  #{userId} AND bt.pass_status=0 AND bt.status= 4 )
+        ) a LEFT JOIN busin_inspection_correction bic ON bic.inspection_task_id = a.id WHERE  bic.status=0
+    </select>
+
+    <select id="getSupervisePeople" resultType="com.goboosoft.industry.statistics.dto.SupervisePeopleDTO">
+        <if test="params.dateType==0">
+        SELECT YEAR(t.finish_date) year,SUM(t.people) peopleNum FROM
+        (SELECT id,finish_date,IF(LENGTH(accompany_user_ids)!=0,
+        ROUND((LENGTH(accompany_user_ids)-LENGTH(REPLACE(accompany_user_ids,',','')))/LENGTH(','))+2,1) people
+        FROM busin_inspection_task
+        </if>
+        <if test="params.dateType==1">
+            SELECT YEAR(t.finish_date) year,QUARTER(t.finish_date) quarter,SUM(t.people) peopleNum FROM
+            (SELECT id,finish_date,IF(LENGTH(accompany_user_ids)!=0,
+            ROUND((LENGTH(accompany_user_ids)-LENGTH(REPLACE(accompany_user_ids,',','')))/LENGTH(','))+2,1) people
+            FROM busin_inspection_task
+        </if>
+        <if test="params.dateType==2">
+            SELECT YEAR(t.finish_date) year,MONTH(t.finish_date) month,SUM(t.people) peopleNum FROM
+            (SELECT id,finish_date,IF(LENGTH(accompany_user_ids)!=0,
+            ROUND((LENGTH(accompany_user_ids)-LENGTH(REPLACE(accompany_user_ids,',','')))/LENGTH(','))+2,1) people
+            FROM busin_inspection_task
+        </if>
+        <if test="params.dateType==3">
+            SELECT YEAR(t.finish_date) year,MONTH(t.finish_date) month,WEEK(t.finish_date) week,SUM(t.people) peopleNum FROM
+            (SELECT id,finish_date,IF(LENGTH(accompany_user_ids)!=0,
+            ROUND((LENGTH(accompany_user_ids)-LENGTH(REPLACE(accompany_user_ids,',','')))/LENGTH(','))+2,1) people
+            FROM busin_inspection_task
+        </if>
+        WHERE
+        (0 =(SELECT is_dept_head FROM `sys_user` WHERE id=  #{params.userId}) AND
+        dept_id IN (SELECT id FROM sys_dept JOIN (SELECT getDeptChildList((SELECT dept_id FROM `sys_user` WHERE id= #{params.userId})) AS idArr) TEMP WHERE FIND_IN_SET(id, TEMP.idArr)
+        OR id = (SELECT dept_id FROM `sys_user` WHERE id=  #{params.userId}))
+        ) OR (inspect_user_id =  #{params.userId} )
+         ) t where t.finish_date IS NOT NULL
+        <if test="params.dateType==0">
+            GROUP BY year ORDER BY year desc
+        </if>
+        <if test="params.dateType==1">
+            GROUP BY year,quarter ORDER BY year DESC,quarter DESC
+        </if>
+        <if test="params.dateType==2">
+            GROUP BY year,month ORDER BY year DESC,month DESC
+        </if>
+        <if test="params.dateType==3">
+            GROUP BY year,month,week ORDER BY year DESC,month DESC,week DESC
+        </if>
+    </select>
+
+</mapper>

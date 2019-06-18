@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.industry.govern.dao.GuideCardItemDao">
+
+    <select id="queryGuideCardItemBycheckStatus" parameterType="java.util.Map" resultType="com.goboosoft.industry.govern.dto.GuideCardItemDTO">
+         SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        select * from (
+
+        SELECT bi.`id`,bi.`inspection_list_id`,bi.`inspection_list_name`,bt.`finish_date`,bt.`check_status`
+        FROM `busin_inspection_task` bt,
+             `busin_inspection_task_item` bi
+        WHERE
+        bt.`id`=bi.`inspection_task_id`
+        AND
+        bt.`company_id`=#{params.companyId} AND bt.`check_status`=#{params.checkStatus}
+
+        ) bb
+        )aa
+        ) c
+        <where>
+        <if test="params.lastRowNum!=null">
+        c.rownum > ${params.lastRowNum}
+        </if>
+        <if test="params.pageSize!=null">
+        LIMIT ${params.pageSize}
+        </if>
+        </where>
+    </select>
+
+</mapper>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.company.companyinspection.dao.ConmpanyInspectDao">
+
+    <resultMap type="com.goboosoft.company.companyinspection.entity.ConmpanyInspectEntity" id="conmpanyInspectMap">
+        <result property="id" column="id"/>
+        <result property="listId" column="list_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="picture" column="picture"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+    <select id="getListNameAndNum" resultType="com.goboosoft.company.companyinspection.dto.ConmpanyInspectDTO">
+        SELECT
+	b.name,
+  t.list_id,
+	count(t.list_id) as count
+FROM
+	conmpany_inspect t
+	LEFT JOIN basic_inspection_list b ON t.list_id = b.id
+WHERE
+	t.user_id = #{userId}
+	group by t.list_id
+    </select>
+
+    <update id="updateCompanyId" parameterType="java.lang.Long">
+        update conmpany_inspect set company_id = #{companyId} where user_id = #{userId}
+    </update>
+
+    <select id="getCount" parameterType="java.lang.Long" resultType="java.lang.Integer">
+        SELECT
+        count( list_id ),
+        list_id,
+        company_id,
+        user_id
+        FROM
+        conmpany_inspect t
+        WHERE
+        t.list_id = #{listId}
+        <if test="companyId != null">
+            and t.company_id = #{companyId}
+        </if>
+        <if test="companyId == null">
+            and t.user_id = #{userId}
+        </if> 	GROUP BY t.list_id
+
+    </select>
+    <select id="getInspectCountById" parameterType="java.lang.Long" resultType="com.goboosoft.company.companyinspection.dto.ConmpanyInspectDTO">
+        select * from conmpany_inspect t where t.company_id = #{companyId}  and  t.list_id = #{listId}
+    </select>
+    <select id="getInspectCountByGroup" parameterType="java.lang.Long" resultType="com.goboosoft.company.companyinspection.dto.ConmpanyInspectDTO">
+        SELECT ci.list_id listId,bi.name NAME,COUNT(ci.list_id) COUNT
+        FROM conmpany_inspect ci LEFT JOIN `basic_inspection_list` bi ON ci.list_id = bi.id
+        JOIN ( SELECT t1.*
+        FROM sys_company t1,
+        (
+        SELECT * FROM sys_user t WHERE(
+        0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{userId})
+        AND
+        t.dept_id IN (
+        SELECT id FROM sys_dept JOIN (SELECT getDeptChildList((SELECT dept_id FROM `sys_user` WHERE id= #{userId})) AS idArr) TEMP WHERE FIND_IN_SET(id, TEMP.idArr)
+        OR id = (SELECT dept_id FROM `sys_user` WHERE id= #{userId})
+
+        ) OR (
+        t.id = #{userId}
+        )
+        )
+        ) t2, sys_dept t3
+        WHERE  t1.`status`=1 AND t1.`company_type`=0  AND t2.dept_id=t3.`id` AND t1.`user_id`=t2.id
+        ) t4  ON ci.company_id = t4.id GROUP BY ci.list_id
+    </select>
+
+    <select id="getInspectCountDetails"  resultType="com.goboosoft.industry.homepage.dto.InspectDetailsDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+        select * from (
+        SELECT ci.list_id inspectId,bi.name inspectName,ci.company_id companyId, sc.name companyName, COUNT(ci.list_id) inspectTotal
+        FROM conmpany_inspect ci LEFT JOIN `basic_inspection_list` bi ON ci.list_id =bi. id
+        LEFT JOIN `sys_company` sc ON ci.company_id =sc.id
+        JOIN ( SELECT  t1.*
+        FROM sys_company t1,
+        (
+        SELECT * FROM sys_user t WHERE(
+        0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{params.userId})
+        AND
+        t.dept_id IN (
+        SELECT id FROM sys_dept JOIN (SELECT getDeptChildList((SELECT dept_id FROM `sys_user` WHERE id= #{params.userId})) AS idArr) TEMP WHERE FIND_IN_SET(id, TEMP.idArr)
+        OR id = (SELECT dept_id FROM `sys_user` WHERE id= #{params.userId})
+
+        ) OR (
+        t.id = #{params.userId}
+        )
+        )
+        ) t2, sys_dept t3
+        WHERE  t1.`status`=1 AND t1.`company_type`=0  AND t2.dept_id=t3.`id` AND t1.`user_id`=t2.id
+        ) t4  ON ci.company_id =t4.id  WHERE ci.list_id = #{params.inspectId}
+        GROUP BY ci.company_id ,ci.list_id ORDER BY ci.create_date DESC
+        ) bb
+        )aa
+        ) c where
+        c.rownum > ${params.lastRowNum}
+    LIMIT ${params.pageSize}
+</select>
+
+    <select id="getByName" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(id) from sys_company t where t.name = #{name}
+    </select>
+
+    <select id="isExits" parameterType="com.goboosoft.company.companyinspection.dto.ConmpanyInspectDTO" resultType="java.lang.Integer">
+        select count(*) from conmpany_inspect
+        <where>
+            <if test="dto.companyId != '' and dto.companyId != null">
+                company_id = #{dto.companyId}
+            </if>
+            <if test="dto.companyId == '' or dto.companyId == null">
+                <if test="dto.userId != '' and dto.userId != null">
+                    user_id = #{dto.userId}
+                </if>
+            </if>
+            and name = #{dto.name}
+        </where>
+    </select>
+
+</mapper>

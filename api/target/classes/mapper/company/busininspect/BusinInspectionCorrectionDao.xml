@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.company.busininspect.dao.BusinInspectionCorrectionDao">
+
+    <resultMap type="com.goboosoft.company.busininspect.entity.BusinInspectionCorrectionEntity" id="businInspectionCorrectionMap">
+        <result property="id" column="id"/>
+        <result property="companyId" column="company_id"/>
+        <result property="companyName" column="company_name"/>
+        <result property="inspectionTaskId" column="inspection_task_id"/>
+        <result property="status" column="status"/>
+        <result property="inspectionUserName" column="inspection_user_name"/>
+        <result property="inspectionDate" column="inspection_date"/>
+        <result property="correctionDate" column="correction_date"/>
+        <result property="lastCorrectionDate" column="last_correction_date"/>
+    </resultMap>
+
+    <select id="getInspectionCorrectionListByCompanyId" resultType="com.goboosoft.company.busininspect.dto.InspectionCorrectionListDTO">
+
+       SELECT
+       c.id, c.correction_status ,a.inspection_task_id, a.inspection_user_name, a.inspection_date, a.last_correction_date,
+        b.tickets,
+        CONCAT(c.inspection_task_item_name,"(",c.inspection_list_name,")")NAME
+        FROM
+        busin_inspection_correction a
+        INNER JOIN busin_inspection_task b ON a.inspection_task_id = b.id
+        INNER JOIN busin_inspection_correction_mx c ON a.id = c.inspection_correction_id
+        WHERE
+        a.company_id = #{params.companyId}
+
+    </select>
+
+    <select id="getInspectionCorrectionListByParams" resultType="com.goboosoft.company.busininspect.dto.InspectionCorrectionListDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+       SELECT
+       c.id, c.correction_status ,a.inspection_task_id, a.inspection_user_name, a.inspection_date, a.last_correction_date,
+        b.tickets,
+        CONCAT(c.inspection_task_item_name,"(",c.inspection_list_name,")")NAME
+        FROM
+        busin_inspection_correction a
+        INNER JOIN busin_inspection_task b ON a.inspection_task_id = b.id
+        INNER JOIN busin_inspection_correction_mx c ON a.id = c.inspection_correction_id
+        WHERE
+        a.company_id = #{params.companyId}
+
+                )aa
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+    </select>
+
+    <select id="getInspectionCorrectionDetailsById" resultType="com.goboosoft.company.busininspect.dto.InspectionCorrectionDetailsDTO">
+       SELECT
+       c.id, a.last_correction_date,a.inspection_user_name,
+        b.tickets, b.pass_status, b.underwrite,
+        c.inspection_list_name,c.problem_description,c.photos
+        FROM
+        busin_inspection_correction a
+        INNER JOIN busin_inspection_task b ON a.inspection_task_id = b.id
+        INNER JOIN busin_inspection_correction_mx c ON a.id = c.inspection_correction_id
+        WHERE
+        c.id = #{id}
+        ORDER BY b.create_date DESC
+    </select>
+
+    <select id="getChild" resultType="java.lang.Long">
+        select id from busin_inspection_correction where pid = #{id}
+    </select>
+
+    <select id="getStatus" resultType="java.lang.Integer">
+        SELECT bicm.correction_status FROM busin_inspection_correction_mx bicm WHERE bicm.inspection_correction_id= #{id}
+    </select>
+
+
+</mapper>

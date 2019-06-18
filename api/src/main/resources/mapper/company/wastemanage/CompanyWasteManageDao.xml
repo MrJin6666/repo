@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.company.wastemanagement.dao.WasteManageDao">
+
+    <resultMap type="com.goboosoft.company.wastemanagement.entity.WasteManageEntity" id="companyWasteManageMap">
+        <result property="id" column="id"/>
+        <result property="wasteType" column="waste_type"/>
+        <result property="wasteName" column="waste_name"/>
+        <result property="count" column="count"/>
+        <result property="unit" column="unit"/>
+        <result property="wasteSource" column="waste_source"/>
+        <result property="saveLocation" column="save_location"/>
+        <result property="inName" column="in_name"/>
+        <result property="outName" column="out_name"/>
+        <result property="inboundOrOutbound" column="inbound_or_outbound"/>
+        <result property="createDate" column="create_date"/>
+        <result property="outboundDate" column="outbound_date"/>
+        <result property="inSignature" column="in_signature"/>
+        <result property="outSignature" column="out_signature"/>
+        <result property="unitSignature" column="unit_signature"/>
+        <result property="receiverUnit" column="receiver_unit"/>
+        <result property="outboundNum" column="outbound_num"/>
+        <result property="belongDept" column="belong_dept"/>
+        <result property="wasteDirection" column="waste_direction"/>
+        <result property="creator" column="creator"/>
+        <result property="transfer" column="transfer"/>
+        <result property="companyId" column="company_id"/>
+        <result property="isVerify" column="is_verify"/>
+        <result property="admin" column="admin"/>
+        <result property="adminSignature" column="admin_signature"/>
+        <result property="verifyDate" column="verify_date"/>
+        <result property="balanceNum" column="balance_num"/>
+    </resultMap>
+
+    <select id="wasteShowList" resultType="com.goboosoft.company.wastemanagement.entity.WasteManageEntity">
+        select * from company_waste_manage
+        where
+        <choose>
+            <when test="inboundOrOutbound != null">
+                company_id = #{companyId} and inbound_or_outbound = #{inboundOrOutbound}
+            </when>
+            <otherwise>
+                company_id = #{companyId}
+            </otherwise>
+        </choose>
+        order by create_date desc
+    </select>
+
+    <select id="wasteShowDetails" resultType="com.goboosoft.company.wastemanagement.entity.WasteManageEntity">
+        select * from company_waste_manage
+        where id = #{id}
+    </select>
+
+    <select id="storeManageSearch" resultType="com.goboosoft.company.wastemanagement.entity.WasteManageEntity">
+        select * from company_waste_manage
+        <where>
+            company_id = #{companyId}
+            <if test="wasteName != null">
+                AND waste_name LIKE CONCAT('%', #{wasteName},'%')
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND (
+                create_date
+                BETWEEN
+                #{startTime}
+                AND
+                #{endTime}
+                )
+            </if>
+        </where>
+
+    </select>
+
+    <update id="updateOutboundWaste" parameterType="com.goboosoft.company.wastemanagement.dto.WasteTypeDTO">
+        update company_waste_manage
+        where waste_type = #{params.wasteType} and waste_name = #{params.wasteName} and company_id = #{params.companyId}
+    </update>
+
+    <select id="selectOutboundWasteCount" resultType="com.goboosoft.company.wastemanagement.entity.WasteTypeEntity">
+        select * from company_waste_manage
+        where waste_type = #{params.wasteType} and waste_name = #{params.wasteName} and company_id = #{params.companyId}
+    </select>
+
+    <select id="verifyingByTypeAndName" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(*) from company_waste_manage
+        where waste_type = #{params.wasteType} and waste_name = #{params.wasteName} and company_id = #{params.companyId}
+    </select>
+
+    <select id="getDetailsByType" parameterType="java.util.Map" resultType="com.goboosoft.company.wastemanagement.dto.WasteManageDTO">
+        select * from company_waste_manage
+        where waste_type = #{params.wasteType} and company_id = #{params.companyId}
+    </select>
+
+    <select id="updateCount" parameterType="java.util.Map" resultType="com.goboosoft.company.wastemanagement.dto.WasteManageDTO">
+
+        select * from company_waste_manage t
+        where t.waste_type = #{params.wasteType} and t.waste_name = #{params.wasteName} and t.company_id = #{params.companyId} and t.inbound_or_outbound = #{params.inboundOrOutbound}
+    </select>
+
+    <select id="isPassByCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select #{params.count} > (select t.count from company_waste_manage t
+        where waste_type = #{params.wasteType} and waste_name = #{params.wasteName} and company_id = #{params.companyId} and inbound_or_outbound = 0)
+    </select>
+
+</mapper>
+

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.modules.busininspect.dao.BusinInspectionCorrectionDao">
+
+    <resultMap type="com.goboosoft.modules.busininspect.entity.BusinInspectionCorrectionEntity" id="businInspectionCorrectionMap">
+        <result property="id" column="id"/>
+        <result property="companyId" column="company_id"/>
+        <result property="companyName" column="company_name"/>
+        <result property="inspectionTaskId" column="inspection_task_id"/>
+        <result property="correctionStatus" column="correction_status"/>
+        <result property="inspectionUserName" column="inspection_user_name"/>
+        <result property="inspectionDate" column="inspection_date"/>
+        <result property="correctionDate" column="correction_date"/>
+        <result property="lastCorrectionDate" column="last_correction_date"/>
+    </resultMap>
+
+
+    <select id="companyScreenRe" resultType="map">
+        select company_name as companyName,correction_date as correctionDate from busin_inspection_correction a where status = 1
+    </select>
+</mapper>

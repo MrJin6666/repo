@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.industry.multiple.dao.IndustryTaskListDao">
+
+    <resultMap type="com.goboosoft.industry.multiple.entity.IndustryTaskListEntity" id="industryTaskListMap">
+        <result property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="receiverId" column="receiver_id"/>
+        <result property="receiver" column="receiver"/>
+        <result property="latestCompletionTime" column="latest_completion_time"/>
+        <result property="description" column="description"/>
+        <result property="accessory" column="accessory"/>
+        <result property="orderNumber" column="order_number"/>
+    </resultMap>
+    <!-- 查询已存在最新的订单号-->
+    <select id="orderNumberSelect" resultType="java.lang.String">
+        select order_number
+        from industry_task_list order by order_number desc limit 0,1
+    </select>
+</mapper>

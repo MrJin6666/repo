@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.modules.sysnotice.dao.SysNoticeDao">
+
+    <resultMap type="com.goboosoft.modules.sysnotice.entity.SysNoticeEntity" id="sysNoticeMap">
+        <result property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="uploadPerson" column="upload_person"/>
+        <result property="picture" column="picture"/>
+        <result property="depId" column="dep_id"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updater" column="updater"/>
+        <result property="updateDate" column="update_date"/>
+    </resultMap>
+
+    <select id="findPageList" resultType="com.goboosoft.modules.sysnotice.dto.SysNoticeDTO">
+        SELECT b.* FROM sys_dept a
+        INNER JOIN (SELECT getDeptFatherList (#{params.deptId}) AS idArr) TEMP
+        join sys_notice b on a.id = b.dep_id
+        WHERE
+	    a.id = #{params.deptId} or
+	    FIND_IN_SET(a.id, TEMP.idArr)
+
+    </select>
+
+</mapper>

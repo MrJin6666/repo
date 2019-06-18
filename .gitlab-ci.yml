@@ -1,0 +1,55 @@
+stages:
+  - stop-server
+  - delete-images
+  - build-images
+  - start-server
+before_script:
+  - echo "---------------------------start gitlab ci------------------------------"
+stop server:
+  stage: stop-server
+  tags:
+    - goboo-test110
+  only:
+    - master
+  script:
+    - docker-compose down
+  # 是否容错
+  allow_failure: true
+delete images:
+  stage: delete-images
+  tags:
+    - goboo-test110
+  only:
+    - master
+  script:
+    - docker rmi smog/admin
+  # 是否容错
+  allow_failure: true
+build images:
+  stage: build-images
+  tags:
+    - goboo-test110
+  only:
+    - master
+  script:
+    - echo "--------------------------开始执行 mvn install-----------------------------"
+    - mvn install
+    - echo "--------------------------结束执行 mvn install-----------------------------"
+    - echo "-------------------开始编译 admin 模块 docker镜像----------------------"
+    - cd admin && mvn clean package docker:build
+    - echo "-------------------admin 模块 docker 镜像编译成功----------------------"
+  # 是否容错
+  allow_failure: false
+start server:
+  stage: start-server
+  tags:
+    - goboo-test110
+  only:
+    - master
+  script:
+    - echo "--------------------启动docker 镜像服务  ----------------------"
+    - docker-compose up -d
+  # 是否容错
+  allow_failure: false
+after_script:
+  - echo "----------------------------end gitlab ci-------------------------------"

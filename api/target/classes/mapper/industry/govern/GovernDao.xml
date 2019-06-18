@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.industry.govern.dao.GovernDao">
+
+    <select id="queryCompanyName" parameterType="java.util.Map"
+            resultType="com.goboosoft.industry.govern.dto.GovernDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        select * from (
+
+        SELECT DISTINCT t1.`id` companyId,(SELECT NAME FROM sys_company WHERE id=t.`company_id`) companyName,MAX(t.`seat_date`) seatDate
+        FROM govern_plan t,
+        sys_company t1,
+        (
+        SELECT * FROM sys_user t WHERE(
+        0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{params.userId})
+        AND
+        t.dept_id IN (
+        SELECT id FROM sys_dept JOIN (SELECT getDeptChildList((SELECT dept_id FROM `sys_user` WHERE
+        id=#{params.userId})) AS idArr) TEMP WHERE FIND_IN_SET(id, TEMP.idArr)
+        OR id = (SELECT dept_id FROM `sys_user` WHERE id= #{params.userId})
+
+        ) OR (
+        t.id = #{params.userId}
+        )
+        )
+        ) t2
+        WHERE
+        t1.`status`=1 AND t1.`company_type`=0 AND  t.`company_id`=t1.id AND t.`status`=3 AND t.`plan_status`=2  AND t.seat_date LIKE #{params.todayDate}
+        <if test="params.area!=null">
+            AND t1.adr_area IN (${params.area})
+        </if>
+
+        <if test="params.governByYouself!=null">
+
+            AND t2.id =t1.`user_id`
+        </if>
+
+        GROUP BY t.`company_id`
+        ) bb
+        )aa
+        ) c
+        <where>
+            <if test="params.lastRowNum!=null">
+                c.rownum > ${params.lastRowNum}
+            </if>
+            <if test="params.pageSize!=null">
+                LIMIT ${params.pageSize}
+            </if>
+        </where>
+
+    </select>
+
+
+    <select id="queryExceedCompanyName" parameterType="java.util.Map"
+            resultType="com.goboosoft.industry.govern.dto.ExceedGovernDTO">
+
+
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        select * from (
+
+        SELECT DISTINCT t.company_id companyId ,(SELECT NAME FROM sys_company WHERE id=t.`company_id`) companyName
+        FROM govern_plan t,
+        sys_company t1,
+        (
+        SELECT * FROM sys_user t WHERE(
+        0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{params.userId})
+        AND
+        t.dept_id IN (
+        SELECT id FROM sys_dept JOIN (SELECT getDeptChildList((SELECT dept_id FROM `sys_user` WHERE id=
+        #{params.userId})) AS idArr) TEMP WHERE FIND_IN_SET(id, TEMP.idArr)
+        OR id = (SELECT dept_id FROM `sys_user` WHERE id= #{params.userId})
+        ) OR (
+        t.id = #{params.userId}
+        )
+        )
+        ) t2
+        WHERE
+        t1.`status`=1 AND t1.`company_type`=0 AND t.end_date <![CDATA[<  ]]>NOW() AND t.`status`=4 AND t.`plan_status`=2 AND t.`company_id`=t1.id
+        <if test="params.area!=null">
+            AND t1.adr_area in (${params.area})
+        </if>
+
+        <if test="params.governByYouself!=null">
+            AND t1.`user_id`=t2.id
+        </if>
+        ) bb
+        )aa
+        ) c
+        <where>
+            <if test="params.lastRowNum!=null">
+                c.rownum > ${params.lastRowNum}
+            </if>
+            <if test="params.pageSize!=null">
+                LIMIT ${params.pageSize}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="queryGovernRecordCompanyList" parameterType="java.util.Map"
+            resultType="com.goboosoft.industry.company.dto.QueryCompanyListDTO">
+
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        select * from (
+
+        SELECT  DISTINCT t.`company_id` companyId ,(SELECT NAME FROM sys_company WHERE id=t.`company_id`) companyName,MAX(t.`seat_date`) seatDate
+        FROM govern_plan t,
+        sys_company t1,
+        (
+        SELECT * FROM sys_user t WHERE(
+        0 =(SELECT is_dept_head FROM `sys_user` WHERE id=  #{params.userId})
+        AND
+        t.dept_id IN (
+        SELECT id FROM sys_dept JOIN (SELECT getDeptChildList((SELECT dept_id FROM `sys_user` WHERE id= #{params.userId})) AS idArr) TEMP WHERE FIND_IN_SET(id, TEMP.idArr)
+        OR id = (SELECT dept_id FROM `sys_user` WHERE id=  #{params.userId})
+
+        ) OR (
+        t.id =  #{params.userId}
+        )
+        )
+        ) t2
+        WHERE  t1.`status`=1 AND t1.`company_type`=0 AND t.`company_id`=t1.id AND t.`status`=3 AND t.`plan_status`=2
+
+        <if test="params.area!=null">
+            AND t1.adr_area IN (${params.area})
+        </if>
+
+        <if test="params.governByYouself!=null">
+            AND t1.`user_id`=t2.id
+        </if>
+        GROUP BY t.`company_id`
+        ) bb
+        )aa
+        ) c
+        <where>
+            <if test="params.lastRowNum!=null">
+                c.rownum > ${params.lastRowNum}
+            </if>
+            <if test="params.pageSize!=null">
+                LIMIT ${params.pageSize}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="queryGuideExceedListByStatus" parameterType="java.util.Map"
+            resultType="com.goboosoft.industry.govern.dto.GuideExceedDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        select * from (
+
+        SELECT gp.id,CONCAT( gp.name,'(',bl.`name`,')') name,gp.code,gp.person,gp.end_date,sc.`name`
+        companyName,gp.`company_id` companyId
+        FROM `govern_plan` gp,
+        `basic_inspection_list` bl,
+        sys_company sc
+        WHERE
+        gp.inspection_list_id= bl.id
+        AND gp.company_id=#{params.companyId} and sc.id=gp.company_id
+        AND
+        gp.end_date <![CDATA[< ]]> NOW() AND gp.`plan_status`=2 AND gp.`status`=#{params.status}
+
+        ) bb
+        )aa
+        ) c
+        <where>
+            <if test="params.lastRowNum!=null">
+                c.rownum > ${params.lastRowNum}
+            </if>
+            <if test="params.pageSize!=null">
+                LIMIT ${params.pageSize}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="queryExceedCompanyItem" parameterType="java.util.Map"
+            resultType="com.goboosoft.industry.govern.dto.GovernItemDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        select * from (
+
+        SELECT gp.id,gp.name name,gp.code,gp.person,gp.end_date endDate,sc.`name` companyName,gp.`company_id` companyId,gp.seat_date seatDate,bi.`name` governItemName
+        FROM `govern_plan` gp,
+        sys_company sc,
+        basic_inspection_list bi
+        WHERE
+        gp.company_id= #{params.companyId} and sc.id=gp.company_id
+        AND
+        gp.end_date <![CDATA[< ]]> NOW() AND gp.`plan_status`=2 AND gp.`status`=4 AND gp.`inspection_list_id`=bi.`id`
+        order by endDate ASC
+
+        ) bb
+        )aa
+        ) c
+        <where>
+            <if test="params.lastRowNum!=null">
+                c.rownum > ${params.lastRowNum}
+            </if>
+            <if test="params.pageSize!=null">
+                LIMIT ${params.pageSize}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="queryTodayCompanyItem" resultType="com.goboosoft.industry.govern.dto.GovernItemDTO">
+
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        select * from (
+
+        SELECT gp.id,gp.name name,gp.code,gp.person,gp.end_date endDate,sc.`name` companyName,gp.`company_id`
+        companyId,gp.seat_date seatDate,bi.`name` governItemName
+        FROM `govern_plan` gp,
+        sys_company sc,
+        basic_inspection_list bi
+        WHERE
+        gp.company_id= #{params.companyId} and sc.id=gp.company_id
+        AND
+        gp.seat_date LIKE #{params.todayDate} AND gp.`plan_status`=2 AND gp.`status`=3 AND
+        gp.`inspection_list_id`=bi.`id`
+        order by seatDate ASC
+
+        ) bb
+        )aa
+        ) c
+        <where>
+            <if test="params.lastRowNum!=null">
+                c.rownum > ${params.lastRowNum}
+            </if>
+            <if test="params.pageSize!=null">
+                LIMIT ${params.pageSize}
+            </if>
+        </where>
+
+    </select>
+
+
+</mapper>

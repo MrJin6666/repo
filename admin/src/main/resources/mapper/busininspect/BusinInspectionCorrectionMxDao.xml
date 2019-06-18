@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.modules.busininspect.dao.BusinInspectionCorrectionMxDao">
+
+    <resultMap type="com.goboosoft.modules.busininspect.entity.BusinInspectionCorrectionMxEntity" id="businInspectionCorrectionMxMap">
+        <result property="id" column="id"/>
+        <result property="inspectionCorrectionId" column="inspection_correction_id"/>
+        <result property="inspectionTaskItemId" column="inspection_task_item_id"/>
+        <result property="problemDescription" column="problem_description"/>
+        <result property="inspectionListId" column="inspection_list_id"/>
+        <result property="inspectionListName" column="inspection_list_name"/>
+        <result property="correctionStatus" column="correction_status"/>
+        <result property="correctionDate" column="correction_date"/>
+    </resultMap>
+
+
+</mapper>

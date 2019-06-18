@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.industry.statistics.dao.RankingDao">
+
+    <select id="queryRanking" parameterType="java.util.Map" resultType="com.goboosoft.industry.statistics.dto.RankingDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        select * from (
+
+        SELECT ROUND(AVG(IFNULL(a.score,0))) score ,concat(sc.adr_city,sc.adr_area) as adrArea
+        FROM
+              (SELECT * FROM `sys_company` WHERE adr_city='西安市') sc
+        LEFT JOIN
+	          (
+		          SELECT ROUND(AVG(IFNULL(bi.score,0))) score,bi.company_id FROM `busin_inspection_task` bi
+                  WHERE
+                  <if test="params.year!=null">
+                        YEAR(finish_date)= #{params.year} AND
+                  </if>
+
+                  <if test="params.month!=null">
+                        MONTH(finish_date)= #{params.month} AND
+                  </if>
+
+                  <if test="params.quarter!=null">
+                       QUARTER(finish_date)=#{params.quarter} AND
+                  </if>
+
+                  <if test="params.week!=null">
+                       WEEK(finish_date)= #{params.week} AND
+                  </if>
+
+		            STATUS IN(4,5)
+		            GROUP BY bi.company_id
+	          ) a
+        ON sc.id =a.company_id
+      GROUP BY sc.adr_area ORDER BY score DESC
+        ) bb
+        )aa
+        ) c
+        <where>
+            <if test="params.lastRowNum!=null">
+                c.rownum > ${params.lastRowNum}
+            </if>
+            <if test="params.pageSize!=null">
+                LIMIT ${params.pageSize}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

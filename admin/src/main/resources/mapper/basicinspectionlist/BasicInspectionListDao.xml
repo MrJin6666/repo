@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.modules.basicinspectionlist.dao.BasicInspectionListDao">
+
+    <resultMap type="com.goboosoft.modules.basicinspectionlist.entity.BasicInspectionListEntity" id="basicInspectionListMap">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="level" column="level"/>
+        <result property="pid" column="pid"/>
+        <result property="totalScore" column="total_score"/>
+    </resultMap>
+
+
+    <select id="findPageList" resultType="com.goboosoft.modules.basicinspectionlist.dto.BasicInspectionListDTO">
+        select a.* from basic_inspection_list a where  pid = '0'
+
+    </select>
+
+    <select id="findAllByPid" resultType="com.goboosoft.modules.basicinspectionlist.dto.BasicInspectionListDTO">
+        select a.* from basic_inspection_list a
+        <where>
+            <if test="pid != null and pid != ''">
+                and level = #{level}
+            </if>
+            <if test="pid != null and pid != ''">
+                and pid = #{pid}
+            </if>
+        </where>
+    </select>
+
+    <delete id="deleteByPid">
+        delete from basic_inspection_list where pid = #{pid}
+    </delete>
+
+
+    <select id="findConmpanyInspectList" resultType="com.goboosoft.modules.basicinspectionlist.dto.BasicInspectionListDTO">
+        select a.id as companyInspectId,c.cycle,c.id,a.name from conmpany_inspect a
+        join basic_inspection_list b on b.id = a.list_id
+        join basic_inspection_list c on b.id = c.pid
+        where a.company_id = #{comId} and c.level = '0'
+    </select>
+
+
+    <select id="companyList" resultType="com.goboosoft.modules.basicinspectionlist.dto.BasicInspectionListDTO">
+        select b.id from (select * from conmpany_inspect where company_id = #{params.companyId} ) a
+        join basic_inspection_list b on b.id = a.list_id
+    </select>
+</mapper>

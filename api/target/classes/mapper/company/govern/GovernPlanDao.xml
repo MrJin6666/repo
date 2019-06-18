@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.company.govern.dao.GovernPlanDao">
+
+    <resultMap type="com.goboosoft.company.govern.entity.GovernPlanEntity" id="governPlanMap">
+        <result property="id" column="id"/>
+        <result property="person" column="person"/>
+        <result property="code" column="code"/>
+        <result property="seatDate" column="seat_date"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="name" column="name"/>
+        <result property="status" column="status"/>
+        <result property="planStatus" column="plan_status"/>
+        <result property="inspectionListId" column="inspection_list_id"/>
+    </resultMap>
+
+    <select id="getGovernListsCount" parameterType="java.util.Map" resultType="com.goboosoft.company.govern.dto.GovernPlanDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        <if test="params.status != null and params.status != ''">
+            select * from (
+        </if>
+        select * from (
+        select t.*,b.pid,sum(count_number) as count_num from (SELECT
+        count( inspection_list_id ) as count_number,
+        m.inspection_list_id,
+        m.id,
+        m.NAME,
+        m.create_date,m.status,m.end_date,m.plan_status,m.seat_date,m.code,
+        k.name as pname,
+        q.name as checkname
+        FROM
+        govern_plan m
+        left join basic_inspection_list k on m.inspection_list_id = k.id
+        left join basic_inspection_list q on k.pid = q.id
+        WHERE
+        company_id = #{params.companyId}
+        GROUP BY
+        m.inspection_list_id
+        ORDER BY
+        m.CREATE_date DESC )t join basic_inspection_list b on t.inspection_list_id = b.id where pid != 0 GROUP BY pid
+        <if test="params.status == null">
+            order by CREATE_date desc
+        </if>
+        ) n where n.count_num >1
+
+        union all
+
+        select * from (
+        select t.*,b.pid,sum(count_number) as count_num from (SELECT
+        count( inspection_list_id ) as count_number,
+        m.inspection_list_id,
+        m.id,
+        m.NAME,
+        m.create_date,m.status,m.end_date,m.plan_status,m.seat_date,m.code,
+        k.name as pname,
+        q.name as checkname
+        FROM
+        govern_plan m
+        left join basic_inspection_list k on m.inspection_list_id = k.id
+        left join basic_inspection_list q on k.pid = q.id
+        WHERE
+        m.company_id = #{params.companyId}
+        GROUP BY
+        m.inspection_list_id
+        ORDER BY
+        m.CREATE_date DESC )t join basic_inspection_list b on t.inspection_list_id = b.id where pid != 0 GROUP BY pid
+        <if test="params.status == null">
+            order by CREATE_date
+        </if>
+        ) n where n.count_num =1
+        <if test="params.status != null and params.status != ''">
+            ) p where p.count_num = 1 order by p.create_date
+        </if>
+
+        )aa
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+
+    </select>
+
+    <select id="getGovernListsByFile" parameterType="java.util.Map" resultType="com.goboosoft.company.govern.dto.GovernPlanDTO">
+SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+
+        select q.id,q.name,q.pname,q.checkname,
+IFNULL(max(h.create_date),q.create_date)  as create_date from (
+SELECT
+	m.id,
+	m.NAME,
+	n.NAME AS pname,
+	p.NAME AS checkname
+FROM
+	govern_plan m
+	LEFT JOIN basic_inspection_list n ON m.inspection_list_id = n.id
+	LEFT JOIN basic_inspection_list p ON n.pid = p.id
+WHERE
+	m.inspection_list_id IN ( SELECT id FROM basic_inspection_list WHERE pid = #{params.id} )
+	AND m.company_id = #{params.companyId}) q
+	left join (select k.id,k.govern_plan_id,k.create_date from govern_process_plan k) h on q.id = h.govern_plan_id
+	group by q.id
+ORDER BY
+	h.create_date DESC
+
+	)aa
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+    </select>
+
+    <select id="getGovernPlan" parameterType="java.util.Map" resultType="com.goboosoft.company.govern.dto.GovernPlanDTO">
+        SELECT * FROM (
+        SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+        (SELECT @rownum := 0) r,
+        (
+        <if test="params.status == null or params.status == ''">
+            (
+        </if>
+        SELECT
+        n.*,m.name as pname,p.name as checkname FROM
+        govern_plan n
+        left join basic_inspection_list m on m.id = n.inspection_list_id
+        left join basic_inspection_list p on m.pid = p.id
+        WHERE
+        n.company_id = #{params.companyId}
+        <if test="params.status != null and params.status != ''">
+            and n.status = #{params.status}
+        </if>
+        <if test="params.status == null or params.status == ''">
+            AND n.STATUS != 3
+            ORDER BY
+            end_date DESC,
+            checkname,
+            NAME,
+            pname DESC)
+
+            UNION ALL
+            (SELECT
+            n.*,
+            m.NAME AS pname,
+            p.NAME AS checkname
+            FROM
+            govern_plan n
+            LEFT JOIN basic_inspection_list m ON m.id = n.inspection_list_id
+            LEFT JOIN basic_inspection_list p ON m.pid = p.id
+            WHERE
+            n.company_id = #{params.companyId}
+            AND n.STATUS = 3
+            ORDER BY
+            end_date DESC,
+            checkname,
+            NAME,
+            pname DESC)
+        </if>
+
+        )aa
+        ) c where
+        c.rownum > ${params.lastRowNum}
+        LIMIT ${params.pageSize}
+
+    </select>
+
+    <select id="getNoProducePlan" parameterType="java.util.Map" resultType="com.goboosoft.industry.multiple.dto.BasicInspectionListDTO">
+      SELECT
+	*
+FROM
+	(
+SELECT
+	a.id AS companyInspectId,
+	c.cycle,
+	c.id,
+	a.NAME
+FROM
+	conmpany_inspect a
+	JOIN basic_inspection_list b ON b.id = a.list_id
+	JOIN basic_inspection_list c ON b.id = c.pid
+WHERE
+	a.company_id = #{params.companyId}
+	AND c.LEVEL = '0'
+GROUP BY
+	a.NAME
+	) m
+WHERE
+	NAME NOT IN (select a.name from govern_plan a WHERE a.company_id = #{params.companyId} GROUP BY a.`name` )
+    </select>
+
+</mapper>

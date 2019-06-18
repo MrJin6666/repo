@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.industry.multiple.dao.SysCompanyDao">
+
+<select id="getCompanys" resultType="com.goboosoft.industry.multiple.dto.SpotCheckCompanyDTO">
+    SELECT * FROM (
+    SELECT (@rownum := @rownum + 1) AS rownum,aa.* FROM
+    (SELECT @rownum := 0) r,
+    (
+    select * from (
+    SELECT id companyId,NAME companyName,linkman linkMan,linkman_phone linkManPhone,address,create_date createDate
+    FROM(
+    SELECT  t1.*
+    FROM sys_company t1,
+    (
+    SELECT * FROM sys_user t WHERE(
+    0 =(SELECT is_dept_head FROM `sys_user` WHERE id= #{params.userId})
+    AND
+    t.dept_id IN (
+    SELECT id FROM sys_dept JOIN (SELECT getDeptChildList((SELECT dept_id FROM `sys_user` WHERE id= #{params.userId})) AS idArr) TEMP WHERE FIND_IN_SET(id, TEMP.idArr)
+    OR id = (SELECT dept_id FROM `sys_user` WHERE id= #{params.userId})
+
+    ) OR (
+    t.id = #{params.userId}
+    )
+    )
+    ) t2, sys_dept t3
+    WHERE  t1.`status`=1 AND t1.`company_type`=0  AND t2.dept_id=t3.`id` AND t1.`user_id`=t2.id
+    ) t1
+    <if test="params.deptId!=null">
+        WHERE  t1.xgdw  IN (
+        SELECT sd.id FROM sys_dept sd
+        WHERE   ( sd.pids LIKE CONCAT('%', #{params.deptId},'%')  OR sd.id= #{params.deptId} )
+        AND sd.`is_com`=0)
+    </if>
+    ) bb
+    )aa
+    ) c where
+    c.rownum > ${params.lastRowNum}
+    LIMIT ${params.pageSize}
+</select>
+
+    <select id="getByCompanyId" parameterType="java.lang.Long" resultType="com.goboosoft.industry.multiple.dto.SysCompanyDTO">
+        select
+         t.id,
+t.name,
+t.code,
+t.adr_province,
+t.adr_city,
+t.adr_area,
+t.adr_street,
+t.adr_community,
+t.adr_road,
+t.lng,
+t.lat,
+t.status,
+t.company_type,
+t.xgdw,
+t.creator,
+t.create_date,
+t.updater,
+t.update_date,
+t.list_ids,
+t.linkman,
+t.address,
+t.issuing_authority,
+t.licence,
+t.linkman_phone,
+t.cause,
+t.check_status,
+t.user_id,
+t.result_is_closed,
+sr.name as province,
+sr1.name as city,
+sr2.name as area
+         from sys_company t
+        LEFT JOIN sys_region sr ON CAST(t.adr_province AS SIGNED) = sr.id
+        LEFT JOIN sys_region sr1 ON CAST(t.adr_city AS SIGNED) = sr1.id
+        LEFT JOIN sys_region sr2 ON CAST(t.adr_area AS SIGNED) = sr2.id
+        where t.id = #{companyId}
+    </select>
+</mapper>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.company.manageread.dao.ManageReadDao">
+
+    <resultMap type="com.goboosoft.company.manageread.entity.ManageReadEntity" id="manageReadMap">
+        <result property="id" column="id"/>
+        <result property="finshRead" column="finsh_read"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+        <result property="manageSystemId" column="manage_system_id"/>
+        <result property="finshReadName" column="finsh_read_name"/>
+        <result property="isCompany" column="is_company"/>
+    </resultMap>
+
+    <select id="getLists" parameterType="java.util.Map" resultType="com.goboosoft.company.manageread.dto.ManageReadDTO">
+        select * from manage_read where manage_system_id = #{params.id} and is_company = #{params.isCompany} order by create_date desc
+    </select>
+
+    <select id="selectLists" resultType="com.goboosoft.company.manageread.dto.ManageReadDTO">
+        select * from manage_read where id = #{id} and manage_system_id = #{manageId} and is_company = 1
+    </select>
+
+    <select id="deleteManageRead" parameterType="java.util.Map" resultType="java.lang.Integer">
+        delete from manage_read where manage_system_id = #{params.id} and is_company = #{params.isCompany} and finsh_read = #{params.userId}
+    </select>
+
+</mapper>

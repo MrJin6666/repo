@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.modules.conmpanyinspect.dao.ConmpanyInspectDao">
+
+    <resultMap type="com.goboosoft.modules.conmpanyinspect.entity.ConmpanyInspectEntity" id="conmpanyInspectMap">
+        <result property="id" column="id"/>
+        <result property="listId" column="list_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="picture" column="picture"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+    <select id="findConmpanyInspectBycomId" resultType="com.goboosoft.modules.conmpanyinspect.dto.ConmpanyInspectDTO">
+        select a.*,b.name as inspectionName from (select * from conmpany_inspect where company_id = #{companyId}) a
+        join basic_inspection_list b on a.list_id = b.id
+    </select>
+
+    <select id="screenCompanyInspectionNum" resultType="map">
+        select count(*) as num,'pkqf' as type from (
+        select * from sys_dept
+        join (select getDeptChildList(#{params.deptId}) as idArr) TEMP where FIND_IN_SET(id, TEMP.idArr) ) a
+        join sys_company b on a.id = b.xgdw
+        join conmpany_inspect c on b.id = c.company_id
+        where c.list_id = 1103472282774237185
+    union all
+        select count(*) as num,'tq' as type from (
+        select * from sys_dept
+        join (select getDeptChildList(#{params.deptId}) as idArr) TEMP where FIND_IN_SET(id, TEMP.idArr) ) a
+        join sys_company b on a.id = b.xgdw
+        join conmpany_inspect c on b.id = c.company_id
+        where c.list_id = 1103472282774237186
+  union all
+        select count(*) as num,'dm' as type from (
+        select * from sys_dept
+        join (select getDeptChildList(#{params.deptId}) as idArr) TEMP where FIND_IN_SET(id, TEMP.idArr) ) a
+        join sys_company b on a.id = b.xgdw
+        join conmpany_inspect c on b.id = c.company_id
+        where c.list_id = 1103472282774237187
+  union all
+        select count(*) as num,'wf' as type from (
+        select * from sys_dept
+        join (select getDeptChildList(#{params.deptId}) as idArr) TEMP where FIND_IN_SET(id, TEMP.idArr) ) a
+        join sys_company b on a.id = b.xgdw
+        join conmpany_inspect c on b.id = c.company_id
+        where c.list_id = 1103472282774237188
+    </select>
+
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.modules.industrytasklist.dao.IndustryTaskLogDao">
+
+    <resultMap type="com.goboosoft.modules.industrytasklist.entity.IndustryTaskLogEntity" id="industryTaskLogMap">
+        <result property="id" column="id"/>
+        <result property="industryTaskId" column="industry_task_id"/>
+        <result property="status" column="status"/>
+        <result property="accessory" column="accessory"/>
+        <result property="remark" column="remark"/>
+        <result property="receiverId" column="receiver_id"/>
+        <result property="finishRemark" column="finish_remark"/>
+        <result property="createDate" column="create_Date"/>
+        <result property="creator" column="creator"/>
+    </resultMap>
+
+
+</mapper>

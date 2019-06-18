@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.company.govern.dao.GovernProcessPlanDao">
+
+    <resultMap type="com.goboosoft.company.govern.entity.GovernProcessPlanEntity" id="governProcessPlanMap">
+        <result property="id" column="id"/>
+        <result property="governPlanId" column="govern_plan_id"/>
+        <result property="picture" column="picture"/>
+        <result property="process" column="process"/>
+        <result property="describ" column="describ"/>
+        <result property="sign" column="sign"/>
+        <result property="selectDate" column="select_date"/>
+        <result property="selectLimitDate" column="select_limit_date"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+    <select id="selectListByProcess" parameterType="java.lang.Long" resultType="com.goboosoft.company.govern.entity.GovernProcessPlanEntity">
+        select * from govern_process_plan t where govern_plan_id = #{id} order by create_date desc
+    </select>
+
+</mapper>

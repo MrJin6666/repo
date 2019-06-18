@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goboosoft.modules.sys.dao.SysUserDao">
+
+	<select id="getList" resultType="com.goboosoft.modules.sys.entity.SysUserEntity">
+		select t1.*, (select t2.name from sys_dept t2 where t2.id=t1.dept_id) deptName from sys_user t1
+		where t1.super_admin = 0
+		<if test="username != null and username.trim() != ''">
+			and t1.username like #{username}
+		</if>
+		<if test="deptIdList != null">
+			and t1.dept_id in
+			<foreach item="id" collection="deptIdList" open="(" separator="," close=")">
+				#{id}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="getById" resultType="com.goboosoft.modules.sys.entity.SysUserEntity">
+		select t1.*, (select t2.name from sys_dept t2 where t2.id=t1.dept_id) deptName from sys_user t1
+			where t1.id = #{value}
+	</select>
+
+	<select id="getByUsername" resultType="com.goboosoft.modules.sys.entity.SysUserEntity">
+		select * from sys_user where username = #{value}
+	</select>
+
+	<update id="updatePassword">
+		update sys_user set password = #{newPassword} where id = #{id}
+	</update>
+
+	<select id="getCountByDeptId" resultType="int">
+		select count(*) from sys_user where dept_id = #{value}
+	</select>
+
+	<select id="findUserChildren" resultType="com.goboosoft.modules.sys.dto.SysUserDTO">
+        SELECT c.* FROM sys_dept a
+		INNER JOIN (SELECT getDeptChildList (#{deptId}) AS idArr) TEMP
+		join sys_company b on b.xgdw = a.id
+		join sys_user c on b.creator = c.id
+		WHERE
+		is_com = 0 and
+		(FIND_IN_SET(a.id, TEMP.idArr) or a.id = #{deptId})
+		and b.company_type = '0'
+    </select>
+
+	<select id="findDeptUserChildren" resultType="com.goboosoft.modules.sys.dto.SysUserDTO">
+        SELECT c.* FROM sys_dept a
+		INNER JOIN (SELECT getDeptChildList (#{deptId}) AS idArr) TEMP
+		join sys_user c on a.id = c.dept_id
+		WHERE
+		is_com = 0 and
+		(FIND_IN_SET(a.id, TEMP.idArr) or a.id = #{deptId})
+    </select>
+
+	<select id="getCompanyId" parameterType="java.lang.Long" resultType="com.goboosoft.modules.sys.dto.SysUserDTO">
+		select * from sys_user where company_id = #{companyId} and is_register = 1
+	</select>
+
+	<select id="getUserDeptName" parameterType="java.lang.Long" resultType="com.goboosoft.modules.sys.dto.SysUserDTO">
+		select t.id, t.`real_name`,t.`mobile`,t.`super_admin` from sys_user t where t.dept_id = #{deptId} AND STATUS=1
+	</select>
+</mapper>
